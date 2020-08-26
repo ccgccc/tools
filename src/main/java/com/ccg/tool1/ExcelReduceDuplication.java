@@ -11,10 +11,9 @@ import java.util.stream.Collectors;
 
 public class ExcelReduceDuplication {
 
-	//测试方法
 	public static void main(String[] args) {
-		XSSFSheet sheet = getSheet("data");
-		List<List<String>> data = readExcelData(sheet);
+		XSSFSheet sheet = getSheet("src/main/java/com/ccg/tool1/linkman.xlsx", "Sheet1");
+		List<List<String>> data = readExcelData(sheet, false);
 		if (data == null || data.size() == 0) {
 			return;
 		}
@@ -32,26 +31,30 @@ public class ExcelReduceDuplication {
 		List<String> pks = data.stream().map(l -> l.get(0)).collect(Collectors.toList());
 		Collection<String> values = map.values();
 		pks.removeAll(values);
+		System.out.println(pks.size());
 		System.out.println(pks);
+		String result = "(";
+		for (int i = 0; i < pks.size(); i++) {
+			result += "'" + pks.get(i) + (i != pks.size() - 1 ? "'," : "')");
+		}
+		System.out.println(result);
 	}
 
+	// 测试方法
 	@Test
 	public void test() {
-		XSSFSheet sheet = getSheet("username");
-		readExcelData(sheet);
-		//获取第二行第4列
+		XSSFSheet sheet = getSheet("src/main/java/com/ccg/tool1/data.xlsx", "data");
+		readExcelData(sheet, true);
+		// 获取第二行第4列
 		String cell2 = getExcelDateByIndex(sheet, 1, 3);
-		//根据第3列值为“customer23”的这一行，来获取该行第2列的值
-		String cell3 = getCellByCaseName(sheet, "customer23", 2, 1);
 		System.out.println(cell2);
-		System.out.println(cell3);
 	}
 
-	private static XSSFSheet getSheet(String sheetName) {
+	private static XSSFSheet getSheet(String file, String sheetName) {
 		FileInputStream fileInputStream = null;
 		XSSFSheet sheet = null;
 		try {
-			fileInputStream = new FileInputStream("src/main/java/com/ccg/tool1/data.xlsx");
+			fileInputStream = new FileInputStream(file);
 			XSSFWorkbook sheets = new XSSFWorkbook(fileInputStream);
 			//获取sheet
 			sheet = sheets.getSheet(sheetName);
@@ -74,31 +77,8 @@ public class ExcelReduceDuplication {
 		return cell;
 	}
 
-	/**
-	 * 根据某一列值为“******”的这一行，来获取该行第x列的值
-	 *
-	 * @param caseName
-	 * @param currentColumn 当前单元格列的索引
-	 * @param targetColumn  目标单元格列的索引
-	 * @return
-	 */
-	public static String getCellByCaseName(XSSFSheet sheet, String caseName, int currentColumn, int targetColumn) {
-		String operateSteps = "";
-		//获取行数
-		int rows = sheet.getPhysicalNumberOfRows();
-		for (int i = 0; i < rows; i++) {
-			XSSFRow row = sheet.getRow(i);
-			String cell = row.getCell(currentColumn).toString();
-			if (cell.equals(caseName)) {
-				operateSteps = row.getCell(targetColumn).toString();
-				break;
-			}
-		}
-		return operateSteps;
-	}
-
 	//打印excel数据
-	public static List<List<String>> readExcelData(XSSFSheet sheet) {
+	public static List<List<String>> readExcelData(XSSFSheet sheet, boolean printFlag) {
 		List<List<String>> data = new ArrayList<>();
 		//获取行数
 		int rowNum = sheet.getPhysicalNumberOfRows();
@@ -110,7 +90,9 @@ public class ExcelReduceDuplication {
 			for (int j = 0; j < columnNum; j++) {
 				String cell = row.getCell(j).toString();
 				list.add(cell);
-				System.out.print(cell + (j < columnNum - 1 ? ", " : "\n"));
+				if (printFlag) {
+					System.out.print(cell + (j < columnNum - 1 ? ", " : "\n"));
+				}
 			}
 			data.add(list);
 		}
